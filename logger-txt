@@ -1,12 +1,13 @@
 #!/bin/bash
+SAVEFILE=~/.loggertext_mute 
 
 version()
 {
   cat <<-EndVersion
-  Logger-TXT
-  Version 2.0
-  Author: Grant Lucas (contact@grantlucas.com)
-  Last updated: 11/02/2014
+  Logger-TXT-Mod
+  Version 2.0.1
+  Author: Grant Lucas (contact@grantlucas.com) / Mod by Daniel Jackel (dev@0x4a.net)
+  Last updated: 28/03/2014
   Release date: 26/07/2010
   License: GPL, http://www.gnu.org/copyleft/gpl.html
 EndVersion
@@ -18,7 +19,7 @@ usage()
 {
   cat<<-EndUsage
 
-Usage: $SCRIPT_NAME [-hVv] [-t type] [-p project] [-d count] [-s|S] [-f path] text
+Usage: $SCRIPT_NAME [-hVv] [-m] [-t type] [-p project] [-d count] [-s|S] [-f path] text
 Try '$SCRIPT_NAME -h' for more information.
 EndUsage
 
@@ -29,7 +30,7 @@ help()
 {
   cat <<-EndHelp
 
-Usage: $SCRIPT_NAME [-hVv] [-t type] [-p project] [-d count] [-s|S] [-f path] text
+Usage: $SCRIPT_NAME [-hVv] [-m] [-t type] [-p project] [-d count] [-s|S] [-f path] text
 
 With no options or input, $SCRIPT_NAME outputs the last 10 lines of the log.
 
@@ -50,6 +51,8 @@ Options:
     method is to export LOGGERTXT_PATH as an environment variable.
   -h
     Help Text.
+  -m
+    Toggle Silent Mode
   -V | v
     Show version information and credits.
   -x
@@ -58,6 +61,7 @@ Options:
 EndHelp
   exit 1
 }
+
 
 deleteLast()
 {
@@ -156,6 +160,24 @@ search_log_sensitive()
   OUTPUT="$OUTPUT$results"
 }
 
+muteToggle()
+{ 
+  if [ ! -f "$SAVEFILE" ]
+  then
+    echo "1" > $SAVEFILE   
+  else 
+    if [ $(cat $SAVEFILE) != 1 ]
+    then
+      echo 1 > $SAVEFILE
+    else
+      echo 0 > $SAVEFILE
+    fi
+  fi
+  [[ $(cat $SAVEFILE) = 1 ]] && OUT="mute" || OUT="normal"
+  echo -e StdOut ist now: $OUT
+  exit
+}
+
 ############################
 # Start of active script
 ############################
@@ -175,23 +197,25 @@ LOG_TYPE=${LOG_TYPE:-''}
 LOG_DISPLAY_COUNT=${LOG_DISPLAY_COUNT:-10}
 LOG_PROJ=${LOG_PROJ:-''}
 
-now=`date '+%d/%m/%y %H:%M %z'`
+now=`date '+%Y-%m-%d %H:%M'`
 app="Logger-TXT"
 SCRIPT_NAME=$(basename "$0")
 
-
 # process options
-while getopts xt:c:p:s:S:f:Vvh o
-do  case "$o" in
+while getopts xt:c:p:s:S:f:Vvhm o
+do  
+  case "$o" in
+ 
   x) confirmDeleteLast;;
   s) SEARCH=$OPTARG;;
   S) SEARCH_CASE=$OPTARG;;
-  t) LOG_TYPE=`echo "$OPTARG" | tr "[:lower:]" "[:upper:]"`;;
+  t) LOG_TYPE=`echo "$OPTARG"`;;
   c) LOG_DISPLAY_COUNT=$OPTARG;;
   p) LOG_PROJ=`echo "$OPTARG" | tr "[:lower:]" "[:upper:]"`;;
   f) LOG_PATH=$OPTARG;;
   h) help;;
   V|v) version;;
+  m) muteToggle;;
   [?]) usage;;
   esac
 done
@@ -214,7 +238,7 @@ if [ ! -z "$1" ]; then
   if [ ! -z $LOG_PROJ ]; then
     sep=" - "
     proj=" in the project $LOG_PROJ"
-    LOG_PROJ="($LOG_PROJ)"
+    LOG_PROJ="[$LOG_PROJ]"
   fi
 
   #there is a proj but no type
@@ -239,7 +263,6 @@ if [ ! -z "$1" ]; then
   OUTPUT="$OUTPUT\"$*\" logged$ltype$proj"
 else
   check_log_file
-
   if [ ! -z $SEARCH ]; then
     search_log "$LOG_PATH" "$SEARCH" "$LOG_DISPLAY_COUNT"
   elif [ ! -z $SEARCH_CASE ]; then
@@ -251,4 +274,7 @@ else
 fi
 
 # Print the output
-echo -e "$OUTPUT"
+if [ $(cat $SAVEFILE) != 1 ]
+then
+  echo -e "$OUTPUT"
+fi

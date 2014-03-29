@@ -3,6 +3,16 @@ Logger TXT - Quick command line logging
 
 Logger TXT is a small, shell based tool to log activities throughout the day to a simple, portable text file, along with the date/time. Options are available to log a specific entry under a type and project. All entries are stored in a simple TXT file. Whether you track purchases, what you ate that day, progress on projects at work or all of the above and more, you will always have a simple, solid way of storing that information and a script that gets out of your way to get it there.
 
+
+Quick Mod by me:
+----------------
+I added a 'silent mode' to the script. 
+To switch it on and off, run with the -m option.
+When muted, the script does not print to stdout, 
+you can reactivate original behavior on the fly!
+
+And I changed the timestamp to YYYY-MM-DD HH:MM
+
 Installation
 ============
 
